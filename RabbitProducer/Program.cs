@@ -1,8 +1,7 @@
-﻿using RabbitMQ.Client;
-using System.Text;
-using Microsoft.Extensions.Configuration;
+﻿using Serilog;
 using RabbitProducer.Configuration;
 using RabbitProducer.Input;
+using RabbitProducer.Logger;
 using RabbitProducer.RabbitService;
 
 namespace RabbitProducer;
@@ -11,6 +10,8 @@ class Program
 {
     static async Task Main(string[] args)
     {
+        var logger = SerilogLogger.GetInstacne();
+        
         var config = AppConfiguration.LoadRabbitMQConfig();
         
         var connectionFactory = new RabbitMQConnectionFactory(config);
@@ -25,7 +26,7 @@ class Program
         await publisher.InitializeAsync(exchangeName, queueName, routingKey);
 
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("\t\t\tWelcome to the RabbitMQ Producer\n");
+        Console.WriteLine("\t\t\tWelcome to the RabbitMQ Producer");
         Console.ResetColor();
         
         while (channel.IsOpen)
@@ -37,13 +38,15 @@ class Program
                 {
                     await publisher.PublishMessageAsync(exchangeName, routingKey, message);
                     
-                    Helpers.PrintMessageSentMessage(message);
+                    logger.LogInformation($"Message: \"{message}\" was sent.");
                 }
             }
             catch (Exception ex)
             {
-                Helpers.PrintErrorMessage(ex.Message);
+                logger.LogError(ex, $"An error occurred: {ex.Message}");
             }
         }
+        
+        Log.CloseAndFlush();
     }
 }
