@@ -43,7 +43,7 @@ class Program
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"An error occurred: {ex.Message}");
+                logger.LogError(ex, $"An error occurred while sending message");
             }
         }
         
